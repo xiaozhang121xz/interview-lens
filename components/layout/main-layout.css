@@ -1,0 +1,145 @@
+/* User Avatar Custom Styles */
+
+/* Smooth transitions for dropdown items */
+.dropdown-item {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Online status indicator with smooth pulse */
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+.online-indicator {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Dropdown content entrance animation */
+@keyframes dropdown-content-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.dropdown-content-enter {
+  animation: dropdown-content-appear 0.2s ease-out;
+}
+
+/* Avatar hover effects */
+.avatar-fallback-hover:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+}
+
+/* Username text transition */
+.username-text {
+  transition: color 0.2s ease-in-out;
+}
+
+/* Dropdown menu separator */
+.dropdown-separator {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 0, 0, 0.06),
+    transparent
+  );
+}
+
+/* Ensure dropdown content maintains pointer cursor */
+.dropdown-content-pointer {
+  cursor: pointer !important;
+}
+
+.dropdown-content-pointer[data-radix-dropdown-menu-content] {
+  cursor: pointer !important;
+}
+
+/* Override cursor-default on dropdown menu items */
+.dropdown-content-pointer [data-radix-dropdown-menu-item],
+.dropdown-content-pointer [data-radix-dropdown-menu-checkbox-item],
+.dropdown-content-pointer [data-radix-dropdown-menu-radio-item] {
+  cursor: pointer !important;
+}
+
+/* Force pointer cursor on all dropdown content and children */
+.dropdown-content-pointer,
+.dropdown-content-pointer *,
+.dropdown-content-pointer [data-slot='dropdown-menu-item'],
+.dropdown-content-pointer [data-slot='dropdown-menu-checkbox-item'],
+.dropdown-content-pointer [data-slot='dropdown-menu-radio-item'] {
+  cursor: pointer !important;
+}
+
+/* Override any cursor-default in dropdown context */
+.dropdown-content-pointer .cursor-default {
+  cursor: pointer !important;
+}
+
+/* Sidebar Menu Item Enhancements */
+.sidebar-menu-item-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Active state animation */
+@keyframes slide-in-indicator {
+  from {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+/* Sidebar button active indicator animation */
+.sidebar-active-indicator {
+  animation: slide-in-indicator 0.3s ease-out;
+  transform-origin: center;
+}
+
+/* Menu item icon scale effect */
+.menu-item-icon {
+  transition: transform 0.2s ease-in-out;
+}
+
+.menu-item-icon:hover {
+  transform: scale(1.1);
+}
+
+/* Footer button hover effects */
+.sidebar-footer-btn {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Settings button rotate effect */
+.settings-icon-hover {
+  transition: transform 0.3s ease-in-out;
+}
+
+.settings-icon-hover:hover {
+  transform: rotate(90deg);
+}
+
+/* Logout button slide effect */
+.logout-icon-hover {
+  transition: transform 0.2s ease-in-out;
+}
+
+.logout-icon-hover:hover {
+  transform: translateX(4px);
+}

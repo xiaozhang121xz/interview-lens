@@ -1,0 +1,3666 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "客户需求洞察助手 API",
+    "version": "1.0.0",
+    "description": "客户需求洞察助手 平台的 API 接口文档 - 使用 next-swagger-doc 自动生成"
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "当前服务器（相对路径）"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "开发服务器"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Users",
+      "description": "用户管理相关接口"
+    },
+    {
+      "name": "Authentication",
+      "description": "用户认证相关接口（登录、注册、令牌刷新等）"
+    },
+    {
+      "name": "Customers",
+      "description": "客户管理相关接口"
+    },
+    {
+      "name": "Interviews",
+      "description": "访谈项目管理相关接口"
+    },
+    {
+      "name": "Outlines",
+      "description": "访谈提纲管理相关接口"
+    },
+    {
+      "name": "Records",
+      "description": "访谈记录管理相关接口"
+    },
+    {
+      "name": "AI",
+      "description": "AI辅助功能相关接口"
+    },
+    {
+      "name": "Dashboard",
+      "description": "首页统计相关接口"
+    }
+  ],
+  "paths": {
+    "/api/ai/generate/follow-up": {
+      "post": {
+        "summary": "AI生成追问问题",
+        "description": "根据当前问题和客户回答，AI智能推荐3-5个追问问题，帮助深入挖掘客户需求。",
+        "tags": [
+          "AI"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "interviewId",
+                  "currentQuestion"
+                ],
+                "properties": {
+                  "interviewId": {
+                    "type": "string",
+                    "description": "访谈项目ID"
+                  },
+                  "currentQuestion": {
+                    "type": "string",
+                    "description": "当前问题内容",
+                    "example": "请介绍一下您当前的业务流程是怎样的？"
+                  },
+                  "customerResponse": {
+                    "type": "string",
+                    "description": "客户的回答内容",
+                    "example": "目前我们的审批流程需要3-5个工作日..."
+                  },
+                  "context": {
+                    "type": "string",
+                    "description": "补充上下文信息"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "追问问题生成成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "questions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "推荐的追问问题列表",
+                          "example": [
+                            "审批流程中最大的瓶颈是什么？",
+                            "有没有考虑过自动化审批？"
+                          ]
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "追问问题生成成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "404": {
+            "description": "访谈项目不存在或无权访问"
+          },
+          "429": {
+            "description": "AI服务限流"
+          },
+          "500": {
+            "description": "AI服务配置错误或服务器内部错误"
+          },
+          "503": {
+            "description": "AI服务不可用"
+          }
+        }
+      }
+    },
+    "/api/ai/generate/journey": {
+      "post": {
+        "summary": "AI生成用户旅程图",
+        "description": "根据访谈记录和AI洞察分析，AI自动生成用户旅程图(User Journey Map)，包含阶段、行为、情绪、痛点和机会点。结果会保存到数据库。",
+        "tags": [
+          "AI"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "interviewId"
+                ],
+                "properties": {
+                  "interviewId": {
+                    "type": "string",
+                    "description": "访谈项目ID"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "用户旅程图生成成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "保存的旅程图ID"
+                        },
+                        "title": {
+                          "type": "string",
+                          "description": "旅程图标题"
+                        },
+                        "stages": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
+                        "emotions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
+                        "painPoints": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
+                        "opportunities": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "用户旅程图生成成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败或访谈无记录"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "404": {
+            "description": "访谈项目不存在或无权访问"
+          },
+          "429": {
+            "description": "AI服务限流"
+          },
+          "500": {
+            "description": "AI服务配置错误或服务器内部错误"
+          },
+          "503": {
+            "description": "AI服务不可用"
+          }
+        }
+      }
+    },
+    "/api/ai/generate/outline": {
+      "post": {
+        "summary": "AI生成访谈提纲",
+        "description": "根据客户信息和访谈目标，AI自动生成结构化的访谈提纲，包括业务场景分析、业务流程梳理和问题列表。",
+        "tags": [
+          "AI"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "customerInfo",
+                  "objective"
+                ],
+                "properties": {
+                  "customerInfo": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "industry"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "客户名称",
+                        "example": "阿里巴巴"
+                      },
+                      "industry": {
+                        "type": "string",
+                        "description": "所属行业",
+                        "example": "互联网"
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "公司描述"
+                      }
+                    }
+                  },
+                  "objective": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "访谈目标",
+                    "example": "了解客户的数字化转型需求和痛点"
+                  },
+                  "background": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "description": "访谈背景"
+                  },
+                  "focusAreas": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "重点关注领域",
+                    "example": [
+                      "业务流程",
+                      "技术架构",
+                      "组织架构"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "访谈提纲生成成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "businessScenario": {
+                          "type": "string",
+                          "description": "业务场景分析"
+                        },
+                        "businessFlow": {
+                          "type": "string",
+                          "description": "业务流程梳理"
+                        },
+                        "outline": {
+                          "type": "object",
+                          "properties": {
+                            "sections": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "questions": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "访谈提纲生成成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败"
+          },
+          "429": {
+            "description": "AI服务限流"
+          },
+          "500": {
+            "description": "AI服务配置错误或服务器内部错误"
+          },
+          "503": {
+            "description": "AI服务不可用"
+          }
+        }
+      }
+    },
+    "/api/ai/generate/persona": {
+      "post": {
+        "summary": "AI生成用户画像",
+        "description": "根据访谈记录和AI洞察分析，AI自动生成用户画像(Persona)，包含用户基本信息、目标、痛点和行为特征。结果会保存到数据库。",
+        "tags": [
+          "AI"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "interviewId"
+                ],
+                "properties": {
+                  "interviewId": {
+                    "type": "string",
+                    "description": "访谈项目ID"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "用户画像生成成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "保存的用户画像ID"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "虚构的用户姓名"
+                        },
+                        "role": {
+                          "type": "string",
+                          "description": "用户角色/职位"
+                        },
+                        "demographics": {
+                          "type": "object",
+                          "properties": {
+                            "age": {
+                              "type": "string"
+                            },
+                            "experience": {
+                              "type": "string"
+                            },
+                            "department": {
+                              "type": "string"
+                            },
+                            "company_size": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "goals": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "用户目标列表"
+                        },
+                        "painPoints": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "用户痛点列表"
+                        },
+                        "behaviors": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "用户行为特征列表"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "用户画像生成成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败或访谈无记录"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "404": {
+            "description": "访谈项目不存在或无权访问"
+          },
+          "429": {
+            "description": "AI服务限流"
+          },
+          "500": {
+            "description": "AI服务配置错误或服务器内部错误"
+          },
+          "503": {
+            "description": "AI服务不可用"
+          }
+        }
+      }
+    },
+    "/api/ai/generate/prd": {
+      "post": {
+        "summary": "AI生成PRD文档",
+        "description": "根据访谈记录和AI洞察分析，AI自动生成产品需求文档(PRD)初稿，包含背景与目标、用户需求、功能需求、非功能需求等章节。结果会保存到数据库。",
+        "tags": [
+          "AI"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "interviewId"
+                ],
+                "properties": {
+                  "interviewId": {
+                    "type": "string",
+                    "description": "访谈项目ID"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PRD文档生成成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "保存的PRD文档ID"
+                        },
+                        "title": {
+                          "type": "string",
+                          "description": "PRD文档标题"
+                        },
+                        "content": {
+                          "type": "string",
+                          "description": "Markdown格式的PRD文档内容"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "PRD文档生成成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败或访谈无记录"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "404": {
+            "description": "访谈项目不存在或无权访问"
+          },
+          "429": {
+            "description": "AI服务限流"
+          },
+          "500": {
+            "description": "AI服务配置错误或服务器内部错误"
+          },
+          "503": {
+            "description": "AI服务不可用"
+          }
+        }
+      }
+    },
+    "/api/ai/generate/summary": {
+      "post": {
+        "summary": "AI生成访谈纪要",
+        "description": "根据访谈记录，AI自动生成结构化的访谈纪要，包括核心内容总结、痛点分析、需求整理和风险识别。结果会保存到数据库。",
+        "tags": [
+          "AI"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "interviewId"
+                ],
+                "properties": {
+                  "interviewId": {
+                    "type": "string",
+                    "description": "访谈项目ID"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "访谈纪要生成成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "summary": {
+                          "type": "string",
+                          "description": "访谈核心内容总结"
+                        },
+                        "painPoints": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "客户痛点列表"
+                        },
+                        "requirements": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "客户需求列表"
+                        },
+                        "risks": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "识别的风险列表"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "访谈纪要生成成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败或访谈无记录"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "404": {
+            "description": "访谈项目不存在或无权访问"
+          },
+          "429": {
+            "description": "AI服务限流"
+          },
+          "500": {
+            "description": "AI服务配置错误或服务器内部错误"
+          },
+          "503": {
+            "description": "AI服务不可用"
+          }
+        }
+      }
+    },
+    "/api/customers/{id}": {
+      "get": {
+        "summary": "获取客户详情",
+        "description": "获取客户完整信息，包含关联的访谈项目列表。支持简单权限验证，非所有者只能查看公开信息。",
+        "tags": [
+          "Customers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "客户ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取客户详情",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "客户ID"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "客户名称"
+                        },
+                        "industry": {
+                          "type": "string",
+                          "description": "所属行业"
+                        },
+                        "contact": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "联系人姓名"
+                        },
+                        "phone": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "联系人电话"
+                        },
+                        "email": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "联系人邮箱"
+                        },
+                        "interviews": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          },
+                          "description": "关联的访谈项目列表"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效的客户ID格式"
+          },
+          "403": {
+            "description": "无权访问此客户信息"
+          },
+          "404": {
+            "description": "客户不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      },
+      "put": {
+        "summary": "更新客户信息",
+        "description": "更新客户的详细信息。只有资源所有者才能更新。客户名称在同一用户下必须唯一。",
+        "tags": [
+          "Customers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "客户ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "客户名称",
+                    "example": "阿里巴巴集团"
+                  },
+                  "industry": {
+                    "type": "string",
+                    "description": "所属行业",
+                    "example": "互联网"
+                  },
+                  "contactName": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "description": "联系人姓名"
+                  },
+                  "contactPhone": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "description": "联系人电话"
+                  },
+                  "contactEmail": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "联系人邮箱"
+                  },
+                  "address": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "description": "地址"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "description": "客户简介"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "备注信息"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "客户更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Customer"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "客户更新成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "403": {
+            "description": "无权操作此客户"
+          },
+          "404": {
+            "description": "客户不存在"
+          },
+          "409": {
+            "description": "客户名称已存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除客户",
+        "description": "删除指定客户及其关联的所有访谈项目。此操作不可逆，请谨慎操作。只有资源所有者才能删除。",
+        "tags": [
+          "Customers"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "客户ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "客户删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "客户删除成功"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "客户删除成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效的客户ID格式"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "403": {
+            "description": "无权删除此客户"
+          },
+          "404": {
+            "description": "客户不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      }
+    },
+    "/api/customers": {
+      "get": {
+        "summary": "获取客户列表",
+        "description": "获取客户列表，支持分页和搜索。只返回当前用户创建的客户。",
+        "tags": [
+          "Customers"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "搜索关键词"
+          },
+          {
+            "name": "industry",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "行业筛选"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取客户列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Customer"
+                          }
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "page": {
+                          "type": "integer"
+                        },
+                        "pageSize": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "500": {
+            "description": "服务器错误"
+          }
+        }
+      },
+      "post": {
+        "summary": "创建客户",
+        "description": "创建新客户。客户名称在同一用户下必须唯一。",
+        "tags": [
+          "Customers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "industry"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "客户名称",
+                    "example": "阿里巴巴"
+                  },
+                  "industry": {
+                    "type": "string",
+                    "description": "所属行业",
+                    "example": "互联网"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "description": "客户简介"
+                  },
+                  "website": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "官网地址"
+                  },
+                  "contactName": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "description": "联系人姓名"
+                  },
+                  "contactPhone": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "description": "联系人电话"
+                  },
+                  "contactEmail": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "联系人邮箱"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "客户创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Customer"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "客户创建成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败"
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "409": {
+            "description": "客户名称已存在"
+          },
+          "500": {
+            "description": "服务器错误"
+          }
+        }
+      }
+    },
+    "/api/dashboard/stats": {
+      "get": {
+        "summary": "获取首页统计数据",
+        "description": "获取当前用户的首页统计数据，包括客户数量、访谈统计、最近访谈等。使用Promise.all并行查询优化性能。",
+        "tags": [
+          "Dashboard"
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取统计数据",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "customerCount": {
+                          "type": "integer",
+                          "description": "客户总数",
+                          "example": 10
+                        },
+                        "interviewStats": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer",
+                              "description": "访谈总数"
+                            },
+                            "completed": {
+                              "type": "integer",
+                              "description": "已完成访谈数"
+                            },
+                            "inProgress": {
+                              "type": "integer",
+                              "description": "进行中访谈数"
+                            },
+                            "draft": {
+                              "type": "integer",
+                              "description": "草稿访谈数"
+                            }
+                          }
+                        },
+                        "recentInterviews": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string"
+                              },
+                              "customer": {
+                                "type": "object",
+                                "nullable": true,
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "industry": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            }
+                          }
+                        },
+                        "interviewsByStatus": {
+                          "type": "object",
+                          "properties": {
+                            "draft": {
+                              "type": "integer"
+                            },
+                            "prepared": {
+                              "type": "integer"
+                            },
+                            "in_progress": {
+                              "type": "integer"
+                            },
+                            "completed": {
+                              "type": "integer"
+                            },
+                            "archived": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      }
+    },
+    "/api/interviews/{id}/outlines/{outlineId}": {
+      "put": {
+        "summary": "更新提纲问题",
+        "description": "更新提纲问题的内容、优先级、状态或排序。只有资源所有者才能更新。",
+        "tags": [
+          "Outlines"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "访谈项目ID"
+          },
+          {
+            "name": "outlineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "提纲ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "question": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "问题内容"
+                  },
+                  "priority": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5,
+                    "description": "优先级（1-5，5最高）"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "asked",
+                      "skipped"
+                    ],
+                    "description": "问题状态"
+                  },
+                  "order": {
+                    "type": "integer",
+                    "description": "排序顺序"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "description": "备注信息"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "提纲问题更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "question": {
+                          "type": "string"
+                        },
+                        "priority": {
+                          "type": "integer"
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "order": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "提纲问题更新成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "403": {
+            "description": "无权操作此访谈项目"
+          },
+          "404": {
+            "description": "访谈项目或提纲不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除提纲问题",
+        "description": "删除指定的提纲问题。删除后，关联的访谈记录的outlineId将被设为null。",
+        "tags": [
+          "Outlines"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "访谈项目ID"
+          },
+          {
+            "name": "outlineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "提纲ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "提纲问题删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "提纲问题删除成功"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "提纲问题删除成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效的ID格式或提纲不属于此访谈项目"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "403": {
+            "description": "无权删除此提纲问题"
+          },
+          "404": {
+            "description": "访谈项目或提纲不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      }
+    },
+    "/api/interviews/{id}/outlines/order": {
+      "put": {
+        "summary": "批量更新提纲顺序",
+        "description": "批量更新多个提纲问题的排序顺序。使用事务保证原子性，所有更新要么全部成功，要么全部失败。",
+        "tags": [
+          "Outlines"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "访谈项目ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "items"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "order"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "提纲ID"
+                        },
+                        "order": {
+                          "type": "integer",
+                          "description": "新的排序顺序"
+                        }
+                      }
+                    },
+                    "description": "包含id和order的数组",
+                    "example": [
+                      {
+                        "id": "outline-1",
+                        "order": 1
+                      },
+                      {
+                        "id": "outline-2",
+                        "order": 2
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "提纲顺序更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "order": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "提纲顺序更新成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败或提纲ID不存在"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "403": {
+            "description": "无权操作此访谈项目"
+          },
+          "404": {
+            "description": "访谈项目不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      }
+    },
+    "/api/interviews/{id}/outlines": {
+      "get": {
+        "summary": "获取访谈提纲列表",
+        "description": "获取指定访谈项目的所有提纲问题，按order升序排列。",
+        "tags": [
+          "Outlines"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "访谈项目ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取提纲列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "提纲ID"
+                          },
+                          "question": {
+                            "type": "string",
+                            "description": "问题内容"
+                          },
+                          "priority": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 5,
+                            "description": "优先级（1-5，5最高）"
+                          },
+                          "order": {
+                            "type": "integer",
+                            "description": "排序顺序"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "asked",
+                              "skipped"
+                            ],
+                            "description": "问题状态"
+                          },
+                          "notes": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "备注信息"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效的访谈ID格式"
+          },
+          "403": {
+            "description": "无权访问此访谈项目"
+          },
+          "404": {
+            "description": "访谈项目不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      },
+      "post": {
+        "summary": "添加提纲问题",
+        "description": "为访谈项目添加一个新的提纲问题。如果未指定order，将自动添加到末尾。",
+        "tags": [
+          "Outlines"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "访谈项目ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "question"
+                ],
+                "properties": {
+                  "question": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "问题内容",
+                    "example": "请介绍一下您当前的业务流程是怎样的？"
+                  },
+                  "priority": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5,
+                    "default": 3,
+                    "description": "优先级（1-5，5最高）"
+                  },
+                  "order": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "排序顺序（0表示自动添加到末尾）"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "description": "备注信息"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "提纲问题添加成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "新创建的提纲ID"
+                        },
+                        "question": {
+                          "type": "string",
+                          "description": "问题内容"
+                        },
+                        "priority": {
+                          "type": "integer",
+                          "description": "优先级"
+                        },
+                        "order": {
+                          "type": "integer",
+                          "description": "排序顺序"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending"
+                          ],
+                          "description": "初始状态为pending"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "提纲问题添加成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "403": {
+            "description": "无权操作此访谈项目"
+          },
+          "404": {
+            "description": "访谈项目不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      }
+    },
+    "/api/interviews/{id}/records/{recordId}": {
+      "put": {
+        "summary": "更新访谈记录",
+        "description": "更新访谈记录的内容、类型、重点标记或关联提纲。只有资源所有者才能更新。",
+        "tags": [
+          "Records"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "访谈项目ID"
+          },
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "记录ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "description": "记录内容"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "answer",
+                      "note",
+                      "pain_point",
+                      "requirement",
+                      "other"
+                    ],
+                    "description": "记录类型"
+                  },
+                  "isHighlight": {
+                    "type": "boolean",
+                    "description": "是否重点记录"
+                  },
+                  "outlineId": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "关联的提纲ID（null表示取消关联）"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "访谈记录更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "isHighlight": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "访谈记录更新成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败或关联提纲不存在"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "403": {
+            "description": "无权操作此访谈项目"
+          },
+          "404": {
+            "description": "访谈项目或记录不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除访谈记录",
+        "description": "删除指定的访谈记录。此操作不可逆。",
+        "tags": [
+          "Records"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "访谈项目ID"
+          },
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "记录ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "访谈记录删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "访谈记录删除成功"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "访谈记录删除成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效的ID格式或记录不属于此访谈项目"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "403": {
+            "description": "无权删除此记录"
+          },
+          "404": {
+            "description": "访谈项目或记录不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      }
+    },
+    "/api/interviews/{id}/records": {
+      "get": {
+        "summary": "获取访谈记录列表",
+        "description": "获取指定访谈项目的所有记录，支持按类型、是否重点、关联提纲筛选。",
+        "tags": [
+          "Records"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "访谈项目ID"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "answer",
+                "note",
+                "pain_point",
+                "requirement",
+                "other"
+              ]
+            },
+            "description": "记录类型筛选"
+          },
+          {
+            "name": "isHighlight",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "是否重点记录筛选"
+          },
+          {
+            "name": "outlineId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "关联提纲ID筛选"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取记录列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "记录ID"
+                          },
+                          "content": {
+                            "type": "string",
+                            "description": "记录内容"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "answer",
+                              "note",
+                              "pain_point",
+                              "requirement",
+                              "other"
+                            ],
+                            "description": "记录类型"
+                          },
+                          "isHighlight": {
+                            "type": "boolean",
+                            "description": "是否重点记录"
+                          },
+                          "outline": {
+                            "type": "object",
+                            "nullable": true,
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "question": {
+                                "type": "string"
+                              },
+                              "order": {
+                                "type": "integer"
+                              }
+                            }
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效的访谈ID格式"
+          },
+          "403": {
+            "description": "无权访问此访谈项目"
+          },
+          "404": {
+            "description": "访谈项目不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      },
+      "post": {
+        "summary": "添加访谈记录",
+        "description": "为访谈项目添加一条新的记录。可以关联到指定的提纲问题。",
+        "tags": [
+          "Records"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "访谈项目ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "content"
+                ],
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "description": "记录内容",
+                    "example": "客户表示目前的审批流程需要3-5个工作日，严重影响了业务效率。"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "answer",
+                      "note",
+                      "pain_point",
+                      "requirement",
+                      "other"
+                    ],
+                    "default": "note",
+                    "description": "记录类型"
+                  },
+                  "isHighlight": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "是否重点记录"
+                  },
+                  "outlineId": {
+                    "type": "string",
+                    "description": "关联的提纲ID"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "访谈记录添加成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "新创建的记录ID"
+                        },
+                        "content": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "isHighlight": {
+                          "type": "boolean"
+                        },
+                        "outline": {
+                          "type": "object",
+                          "nullable": true
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "访谈记录添加成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败或关联提纲不存在"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "403": {
+            "description": "无权操作此访谈项目"
+          },
+          "404": {
+            "description": "访谈项目不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      }
+    },
+    "/api/interviews/{id}": {
+      "get": {
+        "summary": "获取访谈详情",
+        "description": "获取访谈项目完整信息，包含客户信息、提纲、记录、AI洞察和需求列表。",
+        "tags": [
+          "Interviews"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "访谈项目ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取访谈详情",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "访谈ID"
+                        },
+                        "title": {
+                          "type": "string",
+                          "description": "访谈标题"
+                        },
+                        "objective": {
+                          "type": "string",
+                          "description": "访谈目标"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "draft",
+                            "prepared",
+                            "in_progress",
+                            "completed",
+                            "archived"
+                          ],
+                          "description": "访谈状态"
+                        },
+                        "customer": {
+                          "type": "object",
+                          "nullable": true,
+                          "description": "关联的客户信息"
+                        },
+                        "outlines": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          },
+                          "description": "访谈提纲列表"
+                        },
+                        "records": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          },
+                          "description": "访谈记录列表"
+                        },
+                        "insights": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          },
+                          "description": "AI洞察列表"
+                        },
+                        "requirements": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          },
+                          "description": "需求列表"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效的访谈ID格式"
+          },
+          "403": {
+            "description": "无权访问此访谈项目"
+          },
+          "404": {
+            "description": "访谈项目不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      },
+      "put": {
+        "summary": "更新访谈项目",
+        "description": "更新访谈项目的基本信息。只有资源所有者才能更新。",
+        "tags": [
+          "Interviews"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "访谈项目ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "访谈标题",
+                    "example": "XX公司数字化转型需求调研"
+                  },
+                  "objective": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "访谈目标"
+                  },
+                  "background": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "description": "访谈背景"
+                  },
+                  "interviewDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "访谈日期"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "访谈项目更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/InterviewProject"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "访谈项目更新成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "403": {
+            "description": "无权操作此访谈项目"
+          },
+          "404": {
+            "description": "访谈项目不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除访谈项目",
+        "description": "删除访谈项目及其所有关联数据（提纲、记录、AI洞察、需求等）。此操作不可逆。",
+        "tags": [
+          "Interviews"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "访谈项目ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "访谈项目删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "访谈项目删除成功"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "访谈项目删除成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效的访谈ID格式"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "403": {
+            "description": "无权删除此访谈项目"
+          },
+          "404": {
+            "description": "访谈项目不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      }
+    },
+    "/api/interviews/{id}/status": {
+      "put": {
+        "summary": "更新访谈状态",
+        "description": "更新访谈项目的状态。支持状态流转验证，确保状态转换符合业务规则。状态流转规则：draft->prepared->in_progress->completed->archived。",
+        "tags": [
+          "Interviews"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "访谈项目ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "draft",
+                      "prepared",
+                      "in_progress",
+                      "completed",
+                      "archived"
+                    ],
+                    "description": "新的访谈状态",
+                    "example": "in_progress"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "访谈状态更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "访谈ID"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "draft",
+                            "prepared",
+                            "in_progress",
+                            "completed",
+                            "archived"
+                          ],
+                          "description": "更新后的状态"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "访谈状态更新成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "状态流转不合法或请求参数验证失败"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "403": {
+            "description": "无权操作此访谈项目"
+          },
+          "404": {
+            "description": "访谈项目不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      }
+    },
+    "/api/interviews": {
+      "get": {
+        "summary": "获取访谈列表",
+        "description": "获取访谈项目列表，支持分页和按状态、客户筛选。只返回当前用户创建的访谈项目。",
+        "tags": [
+          "Interviews"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码（从1开始）"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页数量（1-100）"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "prepared",
+                "in_progress",
+                "completed",
+                "archived"
+              ]
+            },
+            "description": "状态筛选"
+          },
+          {
+            "name": "customerId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "客户ID筛选"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取访谈列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "description": "访谈ID"
+                              },
+                              "title": {
+                                "type": "string",
+                                "description": "访谈标题"
+                              },
+                              "objective": {
+                                "type": "string",
+                                "description": "访谈目标"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "draft",
+                                  "prepared",
+                                  "in_progress",
+                                  "completed",
+                                  "archived"
+                                ],
+                                "description": "访谈状态"
+                              },
+                              "customer": {
+                                "type": "object",
+                                "nullable": true,
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "industry": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "total": {
+                          "type": "integer",
+                          "description": "总记录数"
+                        },
+                        "page": {
+                          "type": "integer",
+                          "description": "当前页码"
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "description": "每页数量"
+                        },
+                        "totalPages": {
+                          "type": "integer",
+                          "description": "总页数"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "查询参数验证失败"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      },
+      "post": {
+        "summary": "创建访谈项目",
+        "description": "创建新的访谈项目。需要关联一个已存在的客户，且客户必须属于当前用户。",
+        "tags": [
+          "Interviews"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "objective",
+                  "customerId"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "访谈标题",
+                    "example": "XX公司数字化转型需求调研"
+                  },
+                  "objective": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "访谈目标",
+                    "example": "了解客户当前业务流程和数字化转型痛点"
+                  },
+                  "background": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "description": "访谈背景"
+                  },
+                  "customerId": {
+                    "type": "string",
+                    "description": "关联的客户ID"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "访谈项目创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "新创建的访谈ID"
+                        },
+                        "title": {
+                          "type": "string",
+                          "description": "访谈标题"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "draft"
+                          ],
+                          "description": "初始状态为draft"
+                        },
+                        "customer": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "industry": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "访谈项目创建成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败"
+          },
+          "401": {
+            "description": "未授权访问"
+          },
+          "403": {
+            "description": "无权访问此客户"
+          },
+          "404": {
+            "description": "客户不存在"
+          },
+          "500": {
+            "description": "服务器内部错误"
+          }
+        }
+      }
+    },
+    "/api/templates/{id}": {
+      "get": {
+        "summary": "获取模板详情",
+        "description": "获取指定模板的详细信息。用户只能查看自己创建的模板或公开模板。",
+        "tags": [
+          "Templates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "模板ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取模板详情",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/InterviewTemplate"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效的模板ID"
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "404": {
+            "description": "模板不存在或无权访问"
+          },
+          "500": {
+            "description": "服务器错误"
+          }
+        }
+      },
+      "put": {
+        "summary": "更新模板",
+        "description": "更新指定模板的信息。只能更新自己创建的模板。",
+        "tags": [
+          "Templates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "模板ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "模板名称"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "description": "模板描述"
+                  },
+                  "outline": {
+                    "type": "string",
+                    "description": "提纲内容（JSON格式）"
+                  },
+                  "category": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "description": "分类"
+                  },
+                  "isPublic": {
+                    "type": "boolean",
+                    "description": "是否公开"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "模板更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/InterviewTemplate"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "模板更新成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败"
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "403": {
+            "description": "无权修改此模板"
+          },
+          "404": {
+            "description": "模板不存在"
+          },
+          "409": {
+            "description": "模板名称已存在"
+          },
+          "500": {
+            "description": "服务器错误"
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除模板",
+        "description": "删除指定模板。只能删除自己创建的模板。",
+        "tags": [
+          "Templates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "模板ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "模板删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "模板删除成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效的模板ID"
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "403": {
+            "description": "无权删除此模板"
+          },
+          "404": {
+            "description": "模板不存在"
+          },
+          "500": {
+            "description": "服务器错误"
+          }
+        }
+      }
+    },
+    "/api/templates": {
+      "get": {
+        "summary": "获取访谈模板列表",
+        "description": "获取访谈模板列表，支持分页和搜索。返回用户自己的模板和公开模板。",
+        "tags": [
+          "Templates"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "搜索关键词"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "分类筛选"
+          },
+          {
+            "name": "isPublic",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "是否只显示公开模板"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取模板列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/InterviewTemplate"
+                          }
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "page": {
+                          "type": "integer"
+                        },
+                        "pageSize": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "500": {
+            "description": "服务器错误"
+          }
+        }
+      },
+      "post": {
+        "summary": "创建访谈模板",
+        "description": "创建新的访谈模板。模板名称在同一用户下必须唯一。",
+        "tags": [
+          "Templates"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "outline"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "模板名称",
+                    "example": "B端产品访谈模板"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "description": "模板描述"
+                  },
+                  "outline": {
+                    "type": "string",
+                    "description": "提纲内容（JSON格式）"
+                  },
+                  "category": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "description": "分类",
+                    "example": "B端产品"
+                  },
+                  "isPublic": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "是否公开"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "模板创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/InterviewTemplate"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "模板创建成功"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败"
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "409": {
+            "description": "模板名称已存在"
+          },
+          "500": {
+            "description": "服务器错误"
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "summary": "获取用户列表",
+        "description": "支持关键词搜索和分页查询用户列表。关键词可匹配用户名或邮箱。",
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "搜索关键词（可匹配用户名或邮箱）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "1"
+            },
+            "description": "页码（从1开始）"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "20"
+            },
+            "description": "每页数量（1-100）"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取用户列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "number",
+                                "example": 1,
+                                "description": "用户ID"
+                              },
+                              "username": {
+                                "type": "string",
+                                "example": "john_doe",
+                                "description": "用户名"
+                              },
+                              "displayName": {
+                                "type": "string",
+                                "example": "John Doe",
+                                "description": "显示名称"
+                              },
+                              "email": {
+                                "type": "string",
+                                "example": "john@example.com",
+                                "description": "邮箱地址"
+                              },
+                              "department": {
+                                "type": "string",
+                                "nullable": true,
+                                "example": "技术部",
+                                "description": "部门"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "active",
+                                  "inactive",
+                                  "suspended"
+                                ],
+                                "example": "active",
+                                "description": "用户状态"
+                              }
+                            }
+                          }
+                        },
+                        "total": {
+                          "type": "number",
+                          "example": 100,
+                          "description": "总用户数"
+                        },
+                        "page": {
+                          "type": "number",
+                          "example": 1,
+                          "description": "当前页码"
+                        },
+                        "pageSize": {
+                          "type": "number",
+                          "example": 20,
+                          "description": "每页数量"
+                        },
+                        "totalPages": {
+                          "type": "number",
+                          "example": 5,
+                          "description": "总页数"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "查询参数验证失败"
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "page: 页码必须大于0"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "服务器内部错误"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "创建新用户",
+        "description": "创建一个新的用户账号。用户名和邮箱必须唯一。",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "password",
+                  "displayName",
+                  "email"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 50,
+                    "pattern": "^[a-zA-Z0-9_]+$",
+                    "description": "用户名（3-50个字符，只能包含字母、数字和下划线）",
+                    "example": "john_doe"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 100,
+                    "description": "密码（至少6个字符）",
+                    "example": "password123"
+                  },
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50,
+                    "description": "显示名称",
+                    "example": "John Doe"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 100,
+                    "description": "邮箱地址",
+                    "example": "john@example.com"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "pattern": "^[0-9-+()\\\\s]*$",
+                    "description": "手机号码（可选）",
+                    "example": "+86 13800138000"
+                  },
+                  "department": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "description": "部门名称（可选）",
+                    "example": "技术部"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "inactive",
+                      "suspended"
+                    ],
+                    "default": "active",
+                    "description": "用户状态",
+                    "example": "active"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "用户创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 1,
+                          "description": "新创建的用户ID"
+                        },
+                        "username": {
+                          "type": "string",
+                          "example": "john_doe",
+                          "description": "用户名"
+                        },
+                        "displayName": {
+                          "type": "string",
+                          "example": "John Doe",
+                          "description": "显示名称"
+                        },
+                        "email": {
+                          "type": "string",
+                          "example": "john@example.com",
+                          "description": "邮箱地址"
+                        },
+                        "department": {
+                          "type": "string",
+                          "nullable": true,
+                          "example": "技术部",
+                          "description": "部门"
+                        },
+                        "phone": {
+                          "type": "string",
+                          "nullable": true,
+                          "example": "+86 13800138000",
+                          "description": "手机号码"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "inactive",
+                            "suspended"
+                          ],
+                          "example": "active",
+                          "description": "用户状态"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "用户创建成功",
+                      "description": "操作成功消息"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数验证失败或用户已存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "用户名 \"john_doe\" 已存在"
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "username: 用户名至少3个字符"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "服务器内部错误"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {}
+}

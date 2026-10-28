@@ -1,0 +1,93 @@
+#!/bin/bash
+# Git pre-commit hook for code quality and formatting
+# 仅在 main/master 分支时运行检查，其他分支跳过
+
+set -e
+
+# ==========================================
+# 获取当前分支名称
+# ==========================================
+current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+
+# ==========================================
+# 分支检查：仅在 main/master 分支执行检查
+# ==========================================
+if [ "$current_branch" != "main" ] && [ "$current_branch" != "master" ]; then
+    echo "ℹ️  当前分支: $current_branch"
+    echo "⏭️  跳过代码质量检查（仅在 main/master 分支执行）"
+    echo "✅ 允许直接提交"
+    exit 0
+fi
+
+echo "🔍 检测到 main/master 分支，运行代码质量检查..."
+echo "📦 当前分支: $current_branch"
+echo ""
+
+# ==========================================
+# Claude Code 检测 - 已禁用（允许 Claude 自动提交）
+# ==========================================
+# 如需重新启用，请取消下方注释
+#
+# if pgrep -f "anthropic\.claude-code" > /dev/null 2>&1; then
+#     echo "❌ 错误: Claude Code正在运行，main/master分支不允许自动执行git commit"
+#     echo ""
+#     echo "📝 请手动执行git操作："
+#     echo "   1. git add <files>"
+#     echo "   2. git commit -m \"message\""
+#     echo ""
+#     echo "💡 如需强制提交，使用: git commit --no-verify"
+#     exit 1
+# fi
+
+echo "🔍 运行代码质量检查（仅检查暂存文件）..."
+
+# 获取暂存区中的文件
+staged_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx|json|md|css|scss)$' | grep -v node_modules | grep -v '.next' || true)
+
+if [ -z "$staged_files" ]; then
+  echo "✅ 没有需要检查的文件"
+  exit 0
+fi
+
+echo "📦 检查以下文件:"
+echo "$staged_files" | head -n 10
+if [ $(echo "$staged_files" | wc -l) -gt 10 ]; then
+  echo "... (共 $(echo "$staged_files" | wc -l) 个文件)"
+fi
+echo ""
+
+# 运行Prettier格式化检查（仅检查暂存文件）
+echo "📝 检查代码格式..."
+echo "$staged_files" | npx prettier --check 2>/dev/null
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ 代码格式检查失败"
+  echo ""
+  echo "💡 解决方案："
+  echo "   运行以下命令自动修复格式问题："
+  echo "   git diff --cached --name-only | grep -E '\\.(ts|tsx|js|jsx|json|md|css)$' | xargs npx prettier --write"
+  echo "   或使用 'git commit --no-verify' 跳过检查（不推荐）"
+  exit 1
+fi
+
+# ESLint检查已暂时禁用
+# 如需启用，请取消下方注释
+# echo "✅ 检查代码质量..."
+# ts_files=$(echo "$staged_files" | grep -E '\.(ts|tsx)$' || true)
+# if [ -n "$ts_files" ]; then
+#   echo "$ts_files" | npx eslint 2>/dev/null
+#   if [ $? -ne 0 ]; then
+#     echo ""
+#     echo "❌ 代码质量检查失败"
+#     echo ""
+#     echo "💡 解决方案："
+#     echo "   运行 'npm run lint:fix' 自动修复可修复的问题"
+#     echo "   或使用 'git commit --no-verify' 跳过检查（不推荐）"
+#     exit 1
+#   fi
+# else
+#   echo "ℹ️  没有TypeScript文件需要检查"
+# fi
+
+echo "✅ 格式检查通过（ESLint检查已暂时禁用）"
+exit 0

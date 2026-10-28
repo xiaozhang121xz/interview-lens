@@ -1,0 +1,91 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+/other-project
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (不提交到版本控制)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+!.env.mcp.example
+
+# MCP configuration (may contain sensitive data)
+.mcp.json
+!.mcp.json.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# 测试结果和报告
+test-results/
+playwright-report/
+playwright/.cache/
+tests/storage-state.json
+tests/reports/
+tests/e2e/*-report.md
+/.cache/
+/.npm-cache/
+
+# 本地工具和个人配置
+.az/
+.claude/
+.vscode/
+mcp.json
+.mcp.json
+
+# 历史构建目录
+.next-old-*/
+.next.old/
+
+# 数据备份文件
+mockData/backups/
+*.bak
+*.old
+*.tmp
+*_backup.*
+
+# 临时QA报告
+qa-*-report-*.md
+
+# PlantUML生成文件和工具
+*.puml.png
+plantuml.jar
+
+# 临时测试脚本
+test-*.sh

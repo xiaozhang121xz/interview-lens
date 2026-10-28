@@ -1,0 +1,5 @@
+{
+  "$schema": "./project.config.schema.json",
+  "projectName": "客户需求洞察助手",
+  "projectDir": "talkagent"
+}

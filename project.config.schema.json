@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Project Configuration",
+  "description": "项目统一配置文件，存储公开的项目信息",
+  "type": "object",
+  "required": ["projectName", "projectDir"],
+  "properties": {
+    "projectName": {
+      "type": "string",
+      "description": "项目显示名称，用于页面标题、登录页、导航栏等用户可见位置",
+      "examples": ["客户需求洞察助手", "AI Template"]
+    },
+    "projectDir": {
+      "type": "string",
+      "description": "项目目录名，用于 package.json name 和数据库表名前缀",
+      "pattern": "^[a-z0-9-]+$",
+      "examples": ["talkagent", "my-project"]
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,436 @@
+// Prisma Schema Template for MongoDB
+// 客户需求洞察助手 数据库模型模板
+//
+// 📝 使用说明：
+// 1. 此文件是模板文件，请勿直接修改 prisma/schema.prisma
+// 2. 添加新表时，只需在此文件中定义模型
+// 3. 运行 `npm run generate:schema` 自动生成带前缀的 schema
+// 4. 运行 `npm run db:migrate:prefix` 自动迁移数据库表名
+//
+// 🎯 表名规则：
+// - 模板中的 @@map("table_name") 会被自动替换为 @@map("{PROJECT_TABLE_PREFIX}-table_name")
+// - 例如：项目名为 test1，则 @@map("users") → @@map("test1-users")
+// - 前缀由项目目录名决定（运行 node scripts/sync-project-prefix.js 自动配置）
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// 登录用户模型（从 login.json 迁移）
+// ============================================
+model LoginUser {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  username    String   @unique
+  password    String
+  displayName String
+  email       String   @unique
+  avatar      String   @default("")
+  status      String   @default("active") // active, inactive, suspended
+  department  String?
+  phone       String?
+  // 用户角色画像：sales(一线销售), product(产品/需求), developer(研发/架构), manager(团队管理者)
+  rolePersona String?  @default("sales")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("login_users")
+}
+
+// ============================================
+// 用户模型（从 users.json 迁移）
+// ============================================
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  phone     String   @unique
+  nickname  String
+  avatar    String   @default("")
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// 可撤销、单次使用的刷新令牌会话
+model RefreshSession {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  jti       String    @unique
+  userId    String    @db.ObjectId
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_sessions")
+}
+
+// 短信验证码挑战（仅存储哈希，不保存明文验证码）
+model VerificationCode {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  phone      String    @unique
+  codeHash   String
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  lastSentAt DateTime  @default(now())
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([expiresAt])
+  @@map("verification_codes")
+}
+
+// ============================================
+// 客户需求洞察助手 - 数据模型
+// ============================================
+
+// 客户模型
+model Customer {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String                    // 客户名称
+  companyFullName String?               // 公司全称（工商注册名称，来自AI搜索）
+  industry    String?                   // 行业
+  description String?                   // 客户描述
+  website         String?                   // 客户网站
+  contact         String?                   // 联系人
+  phone           String?                   // 联系电话
+  email           String?                   // 邮箱
+  address         String?                   // 地址
+  background      String?                   // 客户背景
+  contactBackground String?                 // 联系人背景
+  notes           String?                   // 备注
+  userId      String   @db.ObjectId     // 所属用户ID
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联关系
+  interviews  InterviewProject[]
+
+  @@index([userId])
+  @@map("customers")
+}
+
+// 访谈项目模型
+model InterviewProject {
+  id                 String    @id @default(auto()) @map("_id") @db.ObjectId
+  title              String                    // 访谈标题
+  objective          String?                   // 访谈目标
+  background         String?                   // 访谈背景
+  status             String    @default("draft") // draft, prepared, in_progress, completed, archived
+  interviewDate      DateTime?                 // 访谈日期
+  customerId         String    @db.ObjectId     // 客户ID
+  userId             String    @db.ObjectId     // 所属用户ID
+  currentSessionId   String?                   // 当前活跃的会话ID
+  sessionStartTime   DateTime?                 // 当前会话开始时间
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // 自动生成状态追踪（创建访谈后自动生成分析报告和问题提纲）
+  preparationStatus     String   @default("pending") // pending, generating, completed, failed
+  preparationError      String?                      // 生成失败时的错误信息
+  preparationStartedAt  DateTime?                    // 开始生成时间
+  preparationCompletedAt DateTime?                    // 完成生成时间
+
+  // 访谈结束后的成品生成，状态用于防止重复点击产生重复文档
+  resultGenerationStatus      String    @default("pending") // pending, generating, completed, partial, failed
+  resultGenerationError       String?
+  resultGenerationStartedAt   DateTime?
+  resultGenerationCompletedAt DateTime?
+
+  // 关联关系
+  customer      Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  outlines      InterviewOutline[]
+  records       InterviewRecord[]
+  transcripts   RealtimeTranscript[]
+  insights      AIInsight[]
+  requirements  RequirementItem[]
+  prdDocuments  PRDDocument[]
+  personas      UserPersona[]
+  journeyMaps   UserJourneyMap[]
+  stageSummaries StageSummary[]
+  insightReports InterviewInsightReport[] // 访谈分析报告
+
+  @@index([userId, status])
+  @@index([customerId])
+  @@map("interview_projects")
+}
+
+// 访谈提纲模型
+model InterviewOutline {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  question  String                    // 问题内容
+  priority  Int      @default(3)       // 优先级 1-5
+  status    String   @default("pending") // pending, asked, skipped
+  order     Int      @default(0)       // 排序
+  notes     String?                   // 备注
+  projectId String   @db.ObjectId     // 所属访谈项目ID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 新增字段 - 提纲生成优化
+  isCore         Boolean  @default(true)      // 是否核心问题
+  reasoning      String?                       // 问题重要性说明
+  source         String   @default("ai")       // 来源：ai, manual, template
+  relatedInsight String?                       // 关联的分析内容（显示文本）
+
+  // 新增字段 - 结构化引用（对应访谈分析报告具体点）
+  relatedPainPointIndex      Int?    // 关联的痛点假设索引（对应 painPointHypotheses 数组）
+  relatedPriorityAreaIndex   Int?    // 关联的优先领域索引（对应 priorityAreas 数组）
+  relatedBusinessScenarioKey String? // 关联的业务场景特征文本
+  insightReferenceType       String? // 引用类型：pain_point, priority_area, business_scenario, mixed
+
+  // 关联关系
+  project   InterviewProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  records   InterviewRecord[]
+
+  @@index([projectId, order])
+  @@map("interview_outlines")
+}
+
+// 访谈记录模型
+model InterviewRecord {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  content     String                    // 记录内容
+  type        String   @default("note") // answer, note, pain_point, requirement, other
+  isHighlight Boolean  @default(false)   // 是否重点
+  outlineId   String?  @db.ObjectId     // 关联的提纲项ID
+  projectId   String   @db.ObjectId     // 所属访谈项目ID
+  sessionId   String?                   // 会话ID，用于区分不同访谈进程
+  source      String   @default("manual") // 来源：manual(手动), ai(AI识别), follow_up(追问采纳)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联关系
+  project InterviewProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  outline InterviewOutline? @relation(fields: [outlineId], references: [id])
+
+  @@index([projectId, createdAt])
+  @@index([outlineId])
+  @@map("interview_records")
+}
+
+// 实时转写模型
+model RealtimeTranscript {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  content    String                    // 转写内容
+  speaker    String?                   // 说话人
+  confidence Float?                    // 置信度
+  projectId  String    @db.ObjectId     // 所属访谈项目ID
+  sessionId  String?                   // 会话ID
+  isKeyPoint Boolean   @default(false)   // 是否被标记为核心要点
+  outlineId  String?   @db.ObjectId      // 关联的提纲问题ID
+  createdAt  DateTime  @default(now())
+
+  // 关联关系
+  project InterviewProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@map("realtime_transcripts")
+}
+
+// AI洞察模型
+model AIInsight {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  type      String                    // 洞察类型：summary, pain_point, requirement, risk
+  content   String                    // 洞察内容
+  projectId String   @db.ObjectId     // 所属访谈项目ID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联关系
+  project InterviewProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@map("ai_insights")
+}
+
+// 需求条目模型
+model RequirementItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String                    // 需求标题
+  description String?                   // 需求描述
+  priority    String   @default("medium") // low, medium, high
+  status      String   @default("pending") // pending, confirmed, implemented
+  category    String?                   // 分类
+  projectId   String   @db.ObjectId     // 所属访谈项目ID
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联关系
+  project InterviewProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@map("requirement_items")
+}
+
+// PRD文档模型
+model PRDDocument {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String                    // PRD标题
+  content   String                    // PRD内容（Markdown格式）
+  version   String   @default("1.0")   // 版本号
+  projectId String   @db.ObjectId     // 所属访谈项目ID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联关系
+  project InterviewProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@map("prd_documents")
+}
+
+// 用户画像模型
+model UserPersona {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String                    // 虚构用户名
+  role         String                    // 角色
+  demographics String?                   // 人口统计信息（JSON格式）
+  goals        String?                   // 目标（JSON数组）
+  painPoints   String?                   // 痛点（JSON数组）
+  behaviors    String?                   // 行为特征（JSON数组）
+  quotes       String?                   // 典型语录（JSON数组）
+  projectId    String   @db.ObjectId     // 所属访谈项目ID
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 关联关系
+  project InterviewProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@map("user_personas")
+}
+
+// 访谈模板模型（P1功能）
+model InterviewTemplate {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String                    // 模板名称
+  description String?                   // 模板描述
+  outline     String                    // 提纲内容（JSON格式）
+  category    String?                   // 分类
+  isPublic    Boolean  @default(false)   // 是否公开
+  userId      String   @db.ObjectId     // 创建者ID
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, isPublic])
+  @@map("interview_templates")
+}
+
+// 用户旅程图模型（P0功能）
+model UserJourneyMap {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  title         String                    // 旅程图标题
+  stages        String                    // 阶段数组（JSON格式）
+  actions       String?                   // 行为（JSON格式）
+  emotions      String?                   // 情绪（JSON格式）
+  painPoints    String?                   // 痛点（JSON格式）
+  opportunities String?                   // 机会点（JSON格式）
+  projectId     String   @db.ObjectId     // 所属访谈项目ID
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 关联关系
+  project InterviewProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@map("user_journey_maps")
+}
+
+// 阶段总结模型
+model StageSummary {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId    String   @db.ObjectId     // 所属访谈项目ID
+  sessionId    String?                   // 会话ID
+  keyFindings  String?                   // 核心发现（JSON数组）
+  painPoints   String?                   // 痛点（JSON数组）
+  requirements String?                   // 需求（JSON数组）
+  suggestions  String?                   // 建议（JSON数组）
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 关联关系
+  project InterviewProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@map("stage_summaries")
+}
+
+// 访谈分析报告模型（提纲生成优化）
+model InterviewInsightReport {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId String   @db.ObjectId     // 所属访谈项目ID
+  content   String                    // 分析报告内容（JSON格式）
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联关系
+  project InterviewProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@map("interview_insight_reports")
+}
+
+// ============================================
+// 分享记录模型（访谈结果分享功能）
+// ============================================
+model ShareRecord {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  token         String   @unique              // 分享链接唯一token (nanoid 12位)
+  interviewId   String   @db.ObjectId         // 所属访谈项目ID
+  userId        String   @db.ObjectId         // 创建者ID
+
+  // 分享内容配置
+  includePRD        Boolean  @default(true)      // 包含PRD文档
+  includePersona    Boolean  @default(true)      // 包含用户画像
+  includeJourneyMap Boolean  @default(true)      // 包含用户旅程图
+  includeInsights   Boolean  @default(true)      // 包含AI洞察
+  includeRecords    Boolean  @default(false)     // 包含访谈记录（敏感，默认不分享）
+
+  // 分享状态
+  status        String   @default("active")    // active, expired, revoked
+  expiresAt     DateTime?                      // 过期时间（null = 永不过期）
+  viewCount     Int      @default(0)           // 访问次数统计
+  lastViewedAt  DateTime?                      // 最后访问时间
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([interviewId])
+  @@map("share_records")
+}
+
+// ============================================
+// 分享报告内容模型（版本管理功能）
+// ============================================
+model ShareReportContent {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  interviewId   String   @db.ObjectId         // 所属访谈项目ID
+  userId        String   @db.ObjectId         // 创建者ID
+  token         String                        // 分享token（可复用或新建）
+
+  // 报告内容
+  content       String                        // 报告内容（JSON格式）
+  summary       String?                       // 报告摘要（用于列表展示）
+  theme         String   @default("ocean-depths") // 主题风格
+
+  // 有效期配置
+  expiresIn     Int?                          // 有效期（小时）
+  expiresAt     DateTime?                     // 过期时间
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([interviewId])  // 按访谈项目查询历史版本
+  @@index([userId])       // 按用户查询
+  @@index([token, createdAt])
+  @@map("share_report_contents")
+}
