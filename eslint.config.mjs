@@ -48,6 +48,48 @@ const eslintConfig = defineConfig([
       'react-hooks/preserve-manual-memoization': 'warn',
     },
   },
+  {
+    files: [
+      'components/**/*.{ts,tsx}',
+      'hooks/**/*.{ts,tsx}',
+      'stores/**/*.{ts,tsx}',
+      'services/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '@/lib/db',
+                '@/lib/db/*',
+                '@interview-lens/database',
+                '@prisma/client',
+              ],
+              message: 'Browser-facing code must call the API and must not import the database layer.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['apps/api/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['react', 'react-dom', 'next/*', '@/components/*', '@/stores/*'],
+              message: 'The standalone API must not import frontend runtime code.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

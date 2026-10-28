@@ -1,7 +1,11 @@
 {
-  "name": "talkagent",
+  "name": "interview-lens",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=20.0.0"
@@ -9,14 +13,20 @@
   "description": "客户需求洞察助手 - 智能客户访谈与需求洞察平台",
   "scripts": {
     "dev": "next dev --webpack",
+    "dev:web": "next dev --webpack",
+    "dev:api": "npm run dev --workspace @interview-lens/api",
     "dev:safe": "bash scripts/safe-dev.sh",
     "dev:3000": "bash scripts/dev-3000.sh",
     "build": "node scripts/generate-schema.js && prisma generate && next build --webpack",
     "start": "next start",
-    "lint": "eslint app components lib stores services types proxy.ts",
+    "lint": "eslint app components lib stores services types proxy.ts apps packages",
     "typecheck": "tsc --noEmit",
+    "typecheck:api": "npm run typecheck --workspace @interview-lens/api",
+    "typecheck:workspaces": "npm run typecheck && npm run typecheck:api",
+    "security:scan": "node scripts/security-scan.mjs",
+    "ci": "npm run security:scan && npm run typecheck:workspaces && npm run test:unit && npm run build",
     "lint:json": "eslint --format json --output-file eslint-report.json",
-    "lint:fix": "eslint app components lib stores services types proxy.ts --fix",
+    "lint:fix": "eslint app components lib stores services types proxy.ts apps packages --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "openapi:generate": "tsx scripts/generate-openapi-with-doc.ts",

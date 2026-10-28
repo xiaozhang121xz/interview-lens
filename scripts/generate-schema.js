@@ -99,11 +99,16 @@ function loadEnvConfig() {
     envConfig.DATABASE_URL = process.env.DATABASE_URL;
   }
 
-  if (!envConfig.PROJECT_TABLE_PREFIX) {
-    log('⚠️  警告：PROJECT_TABLE_PREFIX 未设置（环境变量和 .env.local 都没有）', 'yellow');
+  return envConfig;
+}
+
+function loadProjectConfig() {
+  const configPath = path.join(process.cwd(), 'project.config.json');
+  if (!fs.existsSync(configPath)) {
+    return {};
   }
 
-  return envConfig;
+  return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
 }
 
 // 生成带前缀的 schema
@@ -112,12 +117,14 @@ function generateSchema() {
 
   // 1. 读取环境变量
   const envConfig = loadEnvConfig();
-  const prefix = envConfig.PROJECT_TABLE_PREFIX || '';
+  const projectConfig = loadProjectConfig();
+  const prefix = envConfig.PROJECT_TABLE_PREFIX || projectConfig.projectDir || '';
 
   if (!prefix) {
     log('⚠️  警告：PROJECT_TABLE_PREFIX 未设置，将生成无前缀的表名', 'yellow');
   } else {
-    log(`✅ 项目表名前缀：${prefix}`, 'green');
+    const source = envConfig.PROJECT_TABLE_PREFIX ? '环境变量' : 'project.config.json';
+    log(`✅ 项目表名前缀：${prefix}（来源：${source}）`, 'green');
   }
 
   // 2. 读取模板文件
@@ -170,7 +177,6 @@ function generateSchema() {
 // 🤖 自动生成文件，请勿手动修改
 // 📝 源文件：prisma/schema.template.prisma
 // 🎯 项目前缀：${prefix || '无'}
-// 🕐 生成时间：${new Date().toISOString()}
 // ============================================
 
 `;

@@ -1,0 +1,16 @@
+{
+  "name": "@interview-lens/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./auth": "./src/auth.ts",
+    "./customer": "./src/customer.ts",
+    "./template": "./src/template.ts",
+    "./http": "./src/http.ts"
+  },
+  "dependencies": {
+    "zod": "^4.2.0"
+  }
+}

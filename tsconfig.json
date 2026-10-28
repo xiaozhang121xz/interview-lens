@@ -21,7 +21,10 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@interview-lens/contracts": ["./packages/contracts/src/index.ts"],
+      "@interview-lens/contracts/*": ["./packages/contracts/src/*"],
+      "@interview-lens/database": ["./packages/database/src/index.ts"]
     }
   },
   "include": [

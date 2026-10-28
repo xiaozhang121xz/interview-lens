@@ -108,9 +108,11 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    UI[Next.js 16 / React 19] --> API[App Router API]
+    UI[Web: Next.js 16 / React 19] --> API[API adapters]
+    API --> CONTRACTS[Shared Zod contracts]
     API --> AUTH[JWT + Refresh Session]
-    API --> DB[Prisma + MongoDB]
+    API --> DB[Shared database package]
+    DB --> MONGO[Prisma + MongoDB]
     API --> AI[OpenAI-compatible AI Provider]
     UI --> RT[Realtime Transcription]
     RT --> API
@@ -118,6 +120,8 @@ flowchart TB
 ```
 
 主要技术：Next.js 16、React 19、TypeScript、MongoDB、Prisma、Zod、Zustand、Tailwind CSS、Radix UI、Playwright。
+
+项目正在采用渐进式 Monorepo 迁移：现有根目录 Next.js 应用仍承担 Web 和兼容 API，`apps/api` 是独立后端进程，`packages/contracts` 与 `packages/database` 分别定义共享接口协议和唯一数据库入口。接口会按模块迁移，避免一次性重写破坏现有功能。详细边界和迁移规则见 [架构文档](./docs/architecture/README.md)。
 
 ## 五分钟本地体验
 
@@ -189,9 +193,13 @@ AI_API_TIMEOUT_MS="120000"
 
 ```bash
 npm run dev              # 开发服务器
+npm run dev:web          # 当前 Next.js Web 应用
+npm run dev:api          # 独立 API（迁移中的后端入口，默认 4000 端口）
 npm run build            # 生产构建
 npm run start            # 启动生产构建
 npm run typecheck        # TypeScript 检查
+npm run typecheck:workspaces # Web 与 API 类型检查
+npm run security:scan    # 密钥和 Git 作者隐私扫描
 npm run lint             # ESLint
 npm run test:unit        # AI 证据与质量规则单测
 npm run test:functional  # 临时 MongoDB 上的功能测试
